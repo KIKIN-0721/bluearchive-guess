@@ -18,8 +18,17 @@
     #f7fbff;
 }
 
+.home-layout {
+  width: min(980px, 100%);
+  display: grid;
+  grid-template-columns: minmax(280px, 420px) minmax(320px, 1fr);
+  align-items: center;
+  gap: 28px;
+  animation: page-enter 420ms ease both;
+}
+
 .home-hero {
-  width: min(520px, 100%);
+  width: 100%;
   display: grid;
   gap: 22px;
   justify-items: center;
@@ -44,6 +53,44 @@
   gap: 10px;
 }
 
+.home-panel {
+  display: grid;
+  gap: 14px;
+}
+
+.home-panel section {
+  border: 1px solid #d5e5f0;
+  border-radius: 8px;
+  padding: 18px;
+  background: rgba(255, 255, 255, 0.82);
+  box-shadow: 0 18px 38px rgba(44, 88, 122, 0.11);
+}
+
+.home-panel h2,
+.panel-heading h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 10px;
+  color: #183247;
+  font-size: 16px;
+}
+
+.home-panel p {
+  margin: 8px 0 0;
+  color: #557389;
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.55;
+}
+
+.panel-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
 .menu-button {
   width: 100%;
   height: 56px;
@@ -57,6 +104,12 @@
   background: #ffffff;
   cursor: pointer;
   font-weight: 900;
+  text-decoration: none;
+  transition:
+    transform 160ms ease,
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .menu-button.primary {
@@ -68,6 +121,8 @@
 .menu-button:hover {
   border-color: #63a8d4;
   background: #eef8ff;
+  transform: translateY(-2px);
+  box-shadow: 0 12px 26px rgba(40, 102, 140, 0.14);
 }
 
 .menu-button.primary:hover {
@@ -84,6 +139,7 @@
   border-bottom: 1px solid #dbe8f3;
   background: rgba(255, 255, 255, 0.82);
   backdrop-filter: blur(18px);
+  animation: topbar-enter 360ms ease both;
 }
 
 .eyebrow {
@@ -112,7 +168,9 @@ button {
 
 .icon-button,
 .submit-button,
-.mode-tabs button {
+.mode-tabs button,
+.reveal-button,
+.text-button {
   border: 1px solid #c9dceb;
   background: #ffffff;
   color: #183247;
@@ -130,9 +188,12 @@ button {
 
 .icon-button:hover,
 .submit-button:hover:not(:disabled),
-.mode-tabs button:hover {
+.mode-tabs button:hover,
+.reveal-button:hover:not(:disabled),
+.text-button:hover {
   border-color: #63a8d4;
   background: #eef8ff;
+  transform: translateY(-1px);
 }
 
 .control-band {
@@ -181,6 +242,14 @@ button {
   background: #ffffff;
 }
 
+.round-tools {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+}
+
 .meter {
   display: flex;
   gap: 5px;
@@ -195,6 +264,31 @@ button {
 
 .meter i.used {
   background: #f1b84b;
+  animation: tick-pop 180ms ease both;
+}
+
+.reveal-button {
+  height: 36px;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 900;
+}
+
+.reveal-button:disabled {
+  opacity: 0.52;
+  cursor: not-allowed;
+}
+
+.text-button {
+  min-height: 30px;
+  border-radius: 8px;
+  padding: 0 10px;
+  font-size: 12px;
+  font-weight: 900;
 }
 
 .game-area {
@@ -210,6 +304,7 @@ button {
 .board-wrap {
   position: relative;
   overflow-x: auto;
+  animation: page-enter 320ms ease both;
 }
 
 .guess-table {
@@ -235,6 +330,10 @@ button {
   font-size: 14px;
   font-weight: 800;
   white-space: nowrap;
+}
+
+.guess-table tbody tr {
+  animation: row-in 240ms ease both;
 }
 
 .guess-table td:first-child {
@@ -309,6 +408,34 @@ button {
   gap: 10px;
   color: #6f8799;
   font-weight: 800;
+  animation: pulse-soft 2400ms ease-in-out infinite;
+}
+
+.side-stack {
+  align-self: start;
+  display: grid;
+  gap: 12px;
+}
+
+.mini-stats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 6px 10px;
+  border: 1px solid #d6e5ef;
+  border-radius: 8px;
+  padding: 12px;
+  background: #ffffff;
+}
+
+.mini-stats strong {
+  color: #183247;
+  font-size: 20px;
+}
+
+.mini-stats span {
+  color: #648196;
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .answer {
@@ -317,6 +444,7 @@ button {
   border: 1px solid #d6e5ef;
   border-radius: 8px;
   background: #ffffff;
+  animation: answer-in 260ms ease both;
 }
 
 .answer img {
@@ -326,6 +454,10 @@ button {
   object-fit: cover;
   object-position: top center;
   background: #edf6fc;
+}
+
+.side-stack .answer img {
+  max-height: 280px;
 }
 
 .answer div {
@@ -429,6 +561,7 @@ button {
   border-radius: 8px;
   background: #ffffff;
   box-shadow: 0 18px 40px rgba(32, 67, 95, 0.18);
+  animation: suggestions-in 140ms ease both;
 }
 
 .suggestions button {
@@ -472,6 +605,117 @@ button {
   position: fixed;
 }
 
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.stat-grid div {
+  min-height: 62px;
+  display: grid;
+  align-content: center;
+  gap: 2px;
+  border-radius: 8px;
+  background: #eef7fd;
+  text-align: center;
+}
+
+.stat-grid strong {
+  color: #1f78ad;
+  font-size: 21px;
+  line-height: 1;
+}
+
+.stat-grid span {
+  color: #5f7d91;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes topbar-enter {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes row-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes answer-in {
+  from {
+    opacity: 0;
+    transform: translateX(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes suggestions-in {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes tick-pop {
+  from {
+    transform: scale(0.7);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@keyframes pulse-soft {
+  0%, 100% {
+    opacity: 0.78;
+  }
+  50% {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 1ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 1ms !important;
+  }
+}
+
 @media (max-width: 860px) {
   .game-area {
     grid-template-columns: 1fr;
@@ -490,7 +734,21 @@ button {
     flex-direction: column;
   }
 
+  .round-tools {
+    justify-content: space-between;
+  }
+
   .data-note {
     display: none;
+  }
+}
+
+@media (max-width: 760px) {
+  .home-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .stat-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

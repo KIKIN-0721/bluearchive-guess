@@ -48,9 +48,9 @@ export interface GuessFeedback {
 export const MAX_GUESSES = 8;
 
 export const MODES: Array<{ key: ModeKey; label: string; description: string; releaseIndex: number }> = [
-  { key: 'cn', label: '国服', description: '只包含国服已实装角色', releaseIndex: 2 },
-  { key: 'global', label: '国际服', description: '包含国际服已实装角色', releaseIndex: 1 },
-  { key: 'jp', label: '日服', description: '包含日服/全部最新角色池', releaseIndex: 0 },
+  { key: 'cn', label: '国服', description: '只包含国服已实装学生', releaseIndex: 2 },
+  { key: 'global', label: '国际服', description: '包含国际服已实装学生', releaseIndex: 1 },
+  { key: 'jp', label: '日服', description: '包含日服/全部最新学生池', releaseIndex: 0 },
 ];
 
 export const students = (dataset.students as Student[]).filter((student) => student.exCost !== null);

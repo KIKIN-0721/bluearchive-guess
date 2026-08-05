@@ -4,10 +4,14 @@ import {
   ArrowDown,
   ArrowLeft,
   ArrowUp,
+  BookOpen,
   Database,
+  Eye,
+  ExternalLink,
   RefreshCcw,
   Search,
   Sparkles,
+  Trophy,
   Users,
 } from 'lucide-react';
 import './App.css';
@@ -21,19 +25,13 @@ import {
   studentsForMode,
 } from './game';
 import type { AttributeFeedback, GuessFeedback, ModeKey, Student } from './game';
+import { loadStats, resetStats, saveStats, settleStats } from './stats';
+import type { DeviceStats } from './stats';
 
 type Page = 'home' | 'single' | 'multi';
+type GameStatus = 'playing' | 'won' | 'lost';
 
-const columns = [
-  '姓名',
-  '学院',
-  '攻击',
-  '防御',
-  '年龄',
-  '职责',
-  '招募',
-  'EX Cost',
-];
+const columns = ['姓名', '学院', '攻击', '防御', '年龄', '职责', '招募', 'EX Cost'];
 
 function Cell({ feedback }: { feedback: AttributeFeedback }) {
   return (
@@ -79,23 +77,77 @@ function DataNote({ fixed = false }: { fixed?: boolean }) {
   );
 }
 
-function HomePage({ onSingle, onMulti }: { onSingle: () => void; onMulti: () => void }) {
+function StatGrid({ stats }: { stats: DeviceStats }) {
+  const winRate = stats.games ? Math.round((stats.wins / stats.games) * 100) : 0;
+  const average = stats.wins ? (stats.totalWinningGuesses / stats.wins).toFixed(1) : '-';
+  return (
+    <div className="stat-grid" aria-label="当前设备统计">
+      <div><strong>{stats.games}</strong><span>局数</span></div>
+      <div><strong>{winRate}%</strong><span>胜率</span></div>
+      <div><strong>{stats.currentStreak}</strong><span>当前连胜</span></div>
+      <div><strong>{stats.bestStreak}</strong><span>最佳连胜</span></div>
+      <div><strong>{stats.bestGuess ?? '-'}</strong><span>最佳猜数</span></div>
+      <div><strong>{average}</strong><span>平均猜数</span></div>
+      <div><strong>{stats.reveals}</strong><span>查看答案</span></div>
+      <div><strong>{stats.losses}</strong><span>失败</span></div>
+    </div>
+  );
+}
+
+function HomePage({
+  onSingle,
+  onMulti,
+  stats,
+  onResetStats,
+}: {
+  onSingle: () => void;
+  onMulti: () => void;
+  stats: DeviceStats;
+  onResetStats: () => void;
+}) {
   return (
     <main className="home-shell">
-      <section className="home-hero">
-        <p className="eyebrow">B1MORE</p>
-        <h1>白一把</h1>
-        <p className="home-copy">模仿“弗一把”的《蔚蓝档案》学生猜测游戏</p>
-        <div className="home-actions">
-          <button type="button" className="menu-button primary" onClick={onSingle}>
-            <Sparkles size={20} />
-            单人模式
-          </button>
-          <button type="button" className="menu-button" onClick={onMulti}>
-            <Users size={20} />
-            多人联机
-          </button>
+      <section className="home-layout">
+        <div className="home-hero">
+          <p className="eyebrow">B1MORE</p>
+          <h1>白一把</h1>
+          <p className="home-copy">模仿“弗一把”的《蔚蓝档案》学生猜测游戏</p>
+          <div className="home-actions">
+            <button type="button" className="menu-button primary" onClick={onSingle}>
+              <Sparkles size={20} />
+              单人模式
+            </button>
+            <button type="button" className="menu-button" onClick={onMulti}>
+              <Users size={20} />
+              多人联机
+            </button>
+            <a
+              className="menu-button link"
+              href="https://github.com/KIKIN-0721/bluearchive-guess"
+              target="_blank"
+              rel="noreferrer"
+            >
+              <ExternalLink size={20} />
+              GitHub 仓库
+            </a>
+          </div>
         </div>
+
+        <aside className="home-panel">
+          <section>
+            <h2><BookOpen size={18} /> 玩法说明</h2>
+            <p>选择国服、国际服或日服题库，在 8 次机会内猜出目标学生。</p>
+            <p>绿色代表完全正确，红色代表不匹配；年龄和 EX Cost 会用黄色背景与白色箭头提示答案更高或更低。</p>
+            <p>点击“查看答案”会直接揭晓答案，并将本局记录为失败。</p>
+          </section>
+          <section>
+            <div className="panel-heading">
+              <h2><Trophy size={18} /> 当前设备记录</h2>
+              <button type="button" className="text-button" onClick={onResetStats}>清空</button>
+            </div>
+            <StatGrid stats={stats} />
+          </section>
+        </aside>
       </section>
       <DataNote fixed />
     </main>
@@ -117,25 +169,27 @@ function MultiPlaceholder({ onBack }: { onBack: () => void }) {
   );
 }
 
-function SingleGame({ onBack }: { onBack: () => void }) {
+function SingleGame({
+  onBack,
+  stats,
+  onSettle,
+}: {
+  onBack: () => void;
+  stats: DeviceStats;
+  onSettle: (input: { mode: ModeKey; status: 'won' | 'lost'; guessCount: number; revealed?: boolean }) => void;
+}) {
   const [mode, setMode] = useState<ModeKey>('cn');
   const [target, setTarget] = useState<Student>(() => pickTarget('cn'));
   const [guesses, setGuesses] = useState<GuessFeedback[]>([]);
   const [query, setQuery] = useState('');
   const [activeIndex, setActiveIndex] = useState(0);
+  const [status, setStatus] = useState<GameStatus>('playing');
+  const [finishReason, setFinishReason] = useState<'guessed' | 'failed' | 'revealed' | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const pool = useMemo(() => studentsForMode(mode), [mode]);
   const usedIds = useMemo(() => new Set(guesses.map((guess) => guess.student.id)), [guesses]);
-  const suggestions = useMemo(
-    () => searchStudents(pool, query, usedIds),
-    [pool, query, usedIds],
-  );
-  const status = guesses.at(-1)?.correct
-    ? 'won'
-    : guesses.length >= MAX_GUESSES
-      ? 'lost'
-      : 'playing';
+  const suggestions = useMemo(() => searchStudents(pool, query, usedIds), [pool, query, usedIds]);
 
   function start(nextMode = mode) {
     setMode(nextMode);
@@ -143,13 +197,34 @@ function SingleGame({ onBack }: { onBack: () => void }) {
     setGuesses([]);
     setQuery('');
     setActiveIndex(0);
+    setStatus('playing');
+    setFinishReason(null);
     window.setTimeout(() => inputRef.current?.focus(), 0);
+  }
+
+  function finish(nextStatus: 'won' | 'lost', guessCount: number, reason: 'guessed' | 'failed' | 'revealed') {
+    setStatus(nextStatus);
+    setFinishReason(reason);
+    onSettle({ mode, status: nextStatus, guessCount, revealed: reason === 'revealed' });
   }
 
   function submitStudent(student: Student) {
     if (status !== 'playing' || usedIds.has(student.id)) return;
     const feedback = compareGuess(student, target, mode);
-    setGuesses((current) => [...current, feedback]);
+    const nextGuesses = [...guesses, feedback];
+    setGuesses(nextGuesses);
+    setQuery('');
+    setActiveIndex(0);
+    if (feedback.correct) {
+      finish('won', nextGuesses.length, 'guessed');
+    } else if (nextGuesses.length >= MAX_GUESSES) {
+      finish('lost', nextGuesses.length, 'failed');
+    }
+  }
+
+  function revealAnswer() {
+    if (status !== 'playing') return;
+    finish('lost', guesses.length, 'revealed');
     setQuery('');
     setActiveIndex(0);
   }
@@ -194,10 +269,16 @@ function SingleGame({ onBack }: { onBack: () => void }) {
             </button>
           ))}
         </div>
-        <div className="meter" aria-label={`已猜 ${guesses.length} / ${MAX_GUESSES}`}>
-          {Array.from({ length: MAX_GUESSES }, (_, index) => (
-            <i key={index} className={index < guesses.length ? 'used' : ''} />
-          ))}
+        <div className="round-tools">
+          <div className="meter" aria-label={`已猜 ${guesses.length} / ${MAX_GUESSES}`}>
+            {Array.from({ length: MAX_GUESSES }, (_, index) => (
+              <i key={index} className={index < guesses.length ? 'used' : ''} />
+            ))}
+          </div>
+          <button className="reveal-button" type="button" onClick={revealAnswer} disabled={status !== 'playing'}>
+            <Eye size={15} />
+            查看答案
+          </button>
         </div>
       </section>
 
@@ -225,17 +306,31 @@ function SingleGame({ onBack }: { onBack: () => void }) {
           )}
         </div>
 
-        {answerVisible && (
-          <aside className={`answer ${status}`}>
-            <img src={target.portraitUrl} alt="" />
-            <div>
-              <p>{status === 'won' ? '猜中了' : '答案'}</p>
-              <strong>{target.name}</strong>
-              {target.shortName !== target.name && <em>{target.shortName}</em>}
-              <span>{target.schoolLabel} · {target.tacticRoleLabel} · EX {target.exCost}</span>
-            </div>
-          </aside>
-        )}
+        <aside className="side-stack">
+          <section className="mini-stats">
+            <strong>{stats.games}</strong>
+            <span>当前设备局数</span>
+            <strong>{stats.wins}</strong>
+            <span>胜场</span>
+          </section>
+          {answerVisible && (
+            <section className={`answer ${status}`}>
+              <img src={target.portraitUrl} alt="" />
+              <div>
+                <p>
+                  {finishReason === 'revealed'
+                    ? '已查看答案，本局判负'
+                    : status === 'won'
+                      ? '猜中了'
+                      : '答案'}
+                </p>
+                <strong>{target.name}</strong>
+                {target.shortName !== target.name && <em>{target.shortName}</em>}
+                <span>{target.schoolLabel} · {target.tacticRoleLabel} · EX {target.exCost}</span>
+              </div>
+            </section>
+          )}
+        </aside>
       </section>
 
       <form className="guess-bar" onSubmit={submit}>
@@ -296,10 +391,32 @@ function SingleGame({ onBack }: { onBack: () => void }) {
 
 function App() {
   const [page, setPage] = useState<Page>('home');
+  const [stats, setStats] = useState<DeviceStats>(() => loadStats());
 
-  if (page === 'single') return <SingleGame onBack={() => setPage('home')} />;
+  function settle(input: { mode: ModeKey; status: 'won' | 'lost'; guessCount: number; revealed?: boolean }) {
+    setStats((current) => {
+      const next = settleStats(current, input);
+      saveStats(next);
+      return next;
+    });
+  }
+
+  function clearStats() {
+    setStats(resetStats());
+  }
+
+  if (page === 'single') {
+    return <SingleGame onBack={() => setPage('home')} stats={stats} onSettle={settle} />;
+  }
   if (page === 'multi') return <MultiPlaceholder onBack={() => setPage('home')} />;
-  return <HomePage onSingle={() => setPage('single')} onMulti={() => setPage('multi')} />;
+  return (
+    <HomePage
+      onSingle={() => setPage('single')}
+      onMulti={() => setPage('multi')}
+      stats={stats}
+      onResetStats={clearStats}
+    />
+  );
 }
 
 export default App;
