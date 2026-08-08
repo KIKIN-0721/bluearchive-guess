@@ -303,33 +303,48 @@ button {
 
 .board-wrap {
   position: relative;
-  overflow-x: auto;
+  min-width: 0;
+  overflow-x: hidden;
   animation: page-enter 320ms ease both;
 }
 
 .guess-table {
   width: 100%;
-  min-width: 900px;
+  table-layout: fixed;
   border-collapse: separate;
   border-spacing: 0 8px;
 }
 
+.guess-table .col-name {
+  width: clamp(112px, 22%, 190px);
+}
+
+.guess-table .col-attribute {
+  width: calc((100% - clamp(112px, 22%, 190px) - clamp(62px, 9%, 96px)) / 6);
+}
+
+.guess-table .col-cost {
+  width: clamp(62px, 9%, 96px);
+}
+
 .guess-table th {
-  padding: 0 8px 6px;
+  padding: 0 clamp(3px, 0.8vw, 8px) 6px;
   color: #5b7487;
-  font-size: 12px;
+  font-size: clamp(10px, 1.2vw, 12px);
   text-align: left;
 }
 
 .guess-table td {
   height: 58px;
-  padding: 0 10px;
+  padding: 0 clamp(4px, 0.9vw, 10px);
   border-block: 1px solid transparent;
   background: #e9eef3;
   color: #334657;
-  font-size: 14px;
+  font-size: clamp(11px, 1.35vw, 14px);
   font-weight: 800;
-  white-space: nowrap;
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+  text-wrap: balance;
 }
 
 .guess-table tbody tr {
@@ -367,7 +382,7 @@ button {
 .guess-table .name {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: clamp(4px, 0.8vw, 8px);
 }
 
 .guess-table .name span,
@@ -388,8 +403,9 @@ button {
 }
 
 .guess-table .name img {
-  width: 38px;
-  height: 38px;
+  width: clamp(28px, 4vw, 38px);
+  height: clamp(28px, 4vw, 38px);
+  flex: 0 0 auto;
   border-radius: 50%;
 }
 
@@ -750,5 +766,46 @@ button {
 
   .stat-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .game-area {
+    padding-inline: 8px;
+  }
+
+  .guess-table {
+    border-spacing: 0 6px;
+  }
+
+  .guess-table .col-name {
+    width: 25%;
+  }
+
+  .guess-table .col-cost {
+    width: 11%;
+  }
+
+  .guess-table th {
+    padding-inline: 2px;
+    font-size: 10px;
+  }
+
+  .guess-table td {
+    height: 48px;
+    padding-inline: 3px;
+    font-size: 10px;
+  }
+
+  .guess-table .name img {
+    display: none;
+  }
+
+  .guess-table .name small {
+    display: none;
+  }
+
+  .hint {
+    margin-left: 1px;
   }
 }

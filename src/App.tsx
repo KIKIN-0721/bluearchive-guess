@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { FormEvent } from 'react';
 import {
   ArrowDown,
@@ -32,6 +32,10 @@ type Page = 'home' | 'single' | 'multi';
 type GameStatus = 'playing' | 'won' | 'lost';
 
 const columns = ['姓名', '学院', '攻击', '防御', '年龄', '职责', '招募', 'EX Cost'];
+
+function confirmAbandonActiveRound(): boolean {
+  return window.confirm('游戏尚未结束，退出或切换题库不会计入统计。确认继续？');
+}
 
 function Cell({ feedback }: { feedback: AttributeFeedback }) {
   return (
@@ -190,6 +194,25 @@ function SingleGame({
   const pool = useMemo(() => studentsForMode(mode), [mode]);
   const usedIds = useMemo(() => new Set(guesses.map((guess) => guess.student.id)), [guesses]);
   const suggestions = useMemo(() => searchStudents(pool, query, usedIds), [pool, query, usedIds]);
+  const hasActiveRound = status === 'playing' && guesses.length > 0;
+
+  useEffect(() => {
+    if (!hasActiveRound) return undefined;
+
+    function warnBeforeUnload(event: BeforeUnloadEvent) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+
+    window.addEventListener('beforeunload', warnBeforeUnload);
+    return () => window.removeEventListener('beforeunload', warnBeforeUnload);
+  }, [hasActiveRound]);
+
+  function guardActiveRound(action: () => void) {
+    if (!hasActiveRound || confirmAbandonActiveRound()) {
+      action();
+    }
+  }
 
   function start(nextMode = mode) {
     setMode(nextMode);
@@ -245,10 +268,20 @@ function SingleGame({
           <h1>猜学生</h1>
         </div>
         <div className="top-actions">
-          <button className="icon-button" type="button" onClick={onBack} aria-label="返回首页">
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => guardActiveRound(onBack)}
+            aria-label="返回首页"
+          >
             <ArrowLeft size={18} />
           </button>
-          <button className="icon-button" type="button" onClick={() => start()} aria-label="重新开始">
+          <button
+            className="icon-button"
+            type="button"
+            onClick={() => guardActiveRound(() => start())}
+            aria-label="重新开始"
+          >
             <RefreshCcw size={18} />
           </button>
         </div>
@@ -261,7 +294,11 @@ function SingleGame({
               key={item.key}
               type="button"
               className={mode === item.key ? 'active' : ''}
-              onClick={() => start(item.key)}
+              onClick={() => {
+                if (item.key !== mode) {
+                  guardActiveRound(() => start(item.key));
+                }
+              }}
               title={item.description}
             >
               {item.label}
@@ -285,6 +322,11 @@ function SingleGame({
       <section className="game-area">
         <div className="board-wrap">
           <table className="guess-table">
+            <colgroup>
+              <col className="col-name" />
+              <col span={6} className="col-attribute" />
+              <col className="col-cost" />
+            </colgroup>
             <thead>
               <tr>
                 {columns.map((column) => (
