@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import type { FormEvent } from 'react';
+import type { CSSProperties, FormEvent } from 'react';
 import {
   ArrowDown,
   ArrowLeft,
@@ -17,26 +17,45 @@ import {
 import './App.css';
 import {
   MAX_GUESSES,
-  MODES,
+  BOARD_COLUMNS,
+  boardColumnWeights,
   compareGuess,
   metadata,
+  MODES,
   pickTarget,
   searchStudents,
   studentsForMode,
 } from './game';
-import type { AttributeFeedback, GuessFeedback, ModeKey, Student } from './game';
+import type { AttributeFeedback, BoardColumnKey, GuessFeedback, ModeKey, Student } from './game';
 import { loadStats, resetStats, saveStats, settleStats } from './stats';
 import type { DeviceStats } from './stats';
 
 type Page = 'home' | 'single' | 'multi';
 type GameStatus = 'playing' | 'won' | 'lost';
 
-const columns = ['姓名', '学院', '攻击', '防御', '年龄', '职责', '招募', 'EX Cost'];
+type BoardWidthStyle = CSSProperties & Record<`--col-${BoardColumnKey}`, string>;
 
 function confirmAbandonActiveRound(): boolean {
   return window.confirm('游戏尚未结束，退出或切换题库不会计入统计。确认继续？');
 }
 
+function boardWidthStyle(mode: ModeKey): BoardWidthStyle {
+  const weights = boardColumnWeights(mode);
+  const total = Object.values(weights).reduce((sum, weight) => sum + weight, 0);
+  const toPercent = (key: BoardColumnKey) => `${(weights[key] / total) * 100}%`;
+  return {
+    '--col-name': toPercent('name'),
+    '--col-school': toPercent('school'),
+    '--col-bulletType': toPercent('bulletType'),
+    '--col-armorType': toPercent('armorType'),
+    '--col-characterAge': toPercent('characterAge'),
+    '--col-tacticRole': toPercent('tacticRole'),
+    '--col-recruitType': toPercent('recruitType'),
+    '--col-exCost': toPercent('exCost'),
+  };
+}
+
+// Renders one feedback cell. Numeric hints are arrows; exact-match fields only use colors.
 function Cell({ feedback }: { feedback: AttributeFeedback }) {
   return (
     <td className={feedback.level}>
@@ -50,6 +69,7 @@ function Cell({ feedback }: { feedback: AttributeFeedback }) {
   );
 }
 
+// A guess row is deliberately dumb: all comparison work is already done in compareGuess().
 function GuessRow({ guess }: { guess: GuessFeedback }) {
   const variant = guess.student.shortName !== guess.student.name ? guess.student.shortName : '';
   return (
@@ -72,6 +92,7 @@ function GuessRow({ guess }: { guess: GuessFeedback }) {
   );
 }
 
+// Shows the data timestamp so testers can tell which SchaleDB snapshot is bundled.
 function DataNote({ fixed = false }: { fixed?: boolean }) {
   return (
     <footer className={`data-note${fixed ? ' static' : ''}`}>
@@ -81,6 +102,7 @@ function DataNote({ fixed = false }: { fixed?: boolean }) {
   );
 }
 
+// Local statistics live only in this browser/device, so the home page can read them synchronously.
 function StatGrid({ stats }: { stats: DeviceStats }) {
   const winRate = stats.games ? Math.round((stats.wins / stats.games) * 100) : 0;
   const average = stats.wins ? (stats.totalWinningGuesses / stats.wins).toFixed(1) : '-';
@@ -158,6 +180,7 @@ function HomePage({
   );
 }
 
+// Multiplayer is kept as an entry point, but no online behavior is wired in on main.
 function MultiPlaceholder({ onBack }: { onBack: () => void }) {
   return (
     <main className="home-shell">
@@ -194,8 +217,10 @@ function SingleGame({
   const pool = useMemo(() => studentsForMode(mode), [mode]);
   const usedIds = useMemo(() => new Set(guesses.map((guess) => guess.student.id)), [guesses]);
   const suggestions = useMemo(() => searchStudents(pool, query, usedIds), [pool, query, usedIds]);
+  const columnStyle = useMemo(() => boardWidthStyle(mode), [mode]);
   const hasActiveRound = status === 'playing' && guesses.length > 0;
 
+  // Browser-level navigation cannot show custom text, but it can still prevent accidental loss.
   useEffect(() => {
     if (!hasActiveRound) return undefined;
 
@@ -214,6 +239,7 @@ function SingleGame({
     }
   }
 
+  // Starting a round also changes the active mode when called from the mode tabs.
   function start(nextMode = mode) {
     setMode(nextMode);
     setTarget((current) => pickTarget(nextMode, current.id));
@@ -225,12 +251,14 @@ function SingleGame({
     window.setTimeout(() => inputRef.current?.focus(), 0);
   }
 
+  // The only place that writes completed games to stats; abandoned rounds never call finish().
   function finish(nextStatus: 'won' | 'lost', guessCount: number, reason: 'guessed' | 'failed' | 'revealed') {
     setStatus(nextStatus);
     setFinishReason(reason);
     onSettle({ mode, status: nextStatus, guessCount, revealed: reason === 'revealed' });
   }
 
+  // Submit compares the picked student and closes the round on a hit or after max guesses.
   function submitStudent(student: Student) {
     if (status !== 'playing' || usedIds.has(student.id)) return;
     const feedback = compareGuess(student, target, mode);
@@ -321,21 +349,21 @@ function SingleGame({
 
       <section className="game-area">
         <div className="board-wrap">
-          <table className="guess-table">
+          <table className="guess-table" style={columnStyle}>
             <colgroup>
               <col className="col-name" />
               <col className="col-school" />
-              <col className="col-compact" />
-              <col className="col-compact" />
-              <col className="col-number" />
-              <col className="col-role" />
+              <col className="col-bulletType" />
+              <col className="col-armorType" />
+              <col className="col-characterAge" />
+              <col className="col-tacticRole" />
               <col className="col-recruit" />
-              <col className="col-cost" />
+              <col className="col-exCost" />
             </colgroup>
             <thead>
               <tr>
-                {columns.map((column) => (
-                  <th key={column}>{column}</th>
+                {BOARD_COLUMNS.map((column) => (
+                  <th key={column.key}>{column.label}</th>
                 ))}
               </tr>
             </thead>
@@ -436,6 +464,7 @@ function SingleGame({
   );
 }
 
+// App owns page navigation and the local stats object shared by home and single-player pages.
 function App() {
   const [page, setPage] = useState<Page>('home');
   const [stats, setStats] = useState<DeviceStats>(() => loadStats());

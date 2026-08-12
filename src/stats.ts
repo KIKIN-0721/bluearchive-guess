@@ -2,6 +2,7 @@ import type { ModeKey } from './game';
 
 const STORAGE_KEY = 'b1more-device-stats-v1';
 
+// Stats are intentionally device-local: no server write happens in the static build.
 export interface DeviceStats {
   games: number;
   wins: number;
@@ -21,6 +22,7 @@ export interface Settlement {
   revealed?: boolean;
 }
 
+// Central default keeps new stat fields backward-compatible with older localStorage records.
 export function emptyStats(): DeviceStats {
   return {
     games: 0,
@@ -53,6 +55,7 @@ function hydrate(value: Partial<DeviceStats> | null): DeviceStats {
   };
 }
 
+// Invalid or manually edited localStorage should never break the game startup.
 export function loadStats(): DeviceStats {
   try {
     return hydrate(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as Partial<DeviceStats> | null);
@@ -65,6 +68,7 @@ export function saveStats(stats: DeviceStats): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
 }
 
+// Convert a finished round into cumulative counters; abandoned rounds skip this function.
 export function settleStats(current: DeviceStats, settlement: Settlement): DeviceStats {
   const won = settlement.status === 'won';
   const modeStats = current.byMode[settlement.mode];

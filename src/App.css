@@ -315,29 +315,37 @@ button {
   border-spacing: 0 8px;
 }
 
+/* Column percentages are computed from the current mode's theoretical widest values in game.ts. */
 .guess-table .col-name {
-  width: 26%;
+  width: var(--col-name);
 }
 
 .guess-table .col-school {
-  width: 18%;
+  width: var(--col-school);
 }
 
-.guess-table .col-compact {
-  width: 8.5%;
+.guess-table .col-bulletType {
+  width: var(--col-bulletType);
 }
 
-.guess-table .col-number,
-.guess-table .col-role {
-  width: 7.5%;
+.guess-table .col-armorType {
+  width: var(--col-armorType);
+}
+
+.guess-table .col-characterAge {
+  width: var(--col-characterAge);
+}
+
+.guess-table .col-tacticRole {
+  width: var(--col-tacticRole);
 }
 
 .guess-table .col-recruit {
-  width: 15%;
+  width: var(--col-recruitType);
 }
 
-.guess-table .col-cost {
-  width: 9%;
+.guess-table .col-exCost {
+  width: var(--col-exCost);
 }
 
 .guess-table th {
@@ -799,28 +807,6 @@ button {
 
   .guess-table {
     border-spacing: 0 6px;
-  }
-
-  .guess-table .col-name {
-    width: 24%;
-  }
-
-  .guess-table .col-school {
-    width: 15%;
-  }
-
-  .guess-table .col-compact,
-  .guess-table .col-number,
-  .guess-table .col-role {
-    width: 8%;
-  }
-
-  .guess-table .col-recruit {
-    width: 17%;
-  }
-
-  .guess-table .col-cost {
-    width: 12%;
   }
 
   .guess-table th {
