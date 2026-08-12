@@ -82,7 +82,7 @@ function exact(value: string, target: string, label = value): AttributeFeedback 
 }
 
 function numeric(value: number | null, target: number | null): AttributeFeedback {
-  if (value === null || target === null) return { value: 'N/A', level: 'wrong' };
+  if (value === null || target === null) return { value: value ?? 'N/A', level: 'wrong' };
   if (value === target) return { value, level: 'correct' };
   return {
     value,
