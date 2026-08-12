@@ -324,7 +324,12 @@ function SingleGame({
           <table className="guess-table">
             <colgroup>
               <col className="col-name" />
-              <col span={6} className="col-attribute" />
+              <col className="col-school" />
+              <col className="col-compact" />
+              <col className="col-compact" />
+              <col className="col-number" />
+              <col className="col-role" />
+              <col className="col-recruit" />
               <col className="col-cost" />
             </colgroup>
             <thead>

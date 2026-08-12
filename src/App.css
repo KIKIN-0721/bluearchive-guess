@@ -293,11 +293,11 @@ button {
 
 .game-area {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 20px;
-  width: min(1240px, 100%);
+  grid-template-columns: minmax(0, 1fr) 240px;
+  gap: 16px;
+  width: min(1480px, 100%);
   margin: 0 auto;
-  padding: 22px clamp(12px, 3vw, 32px) 112px;
+  padding: 22px clamp(8px, 2vw, 24px) 112px;
   box-sizing: border-box;
 }
 
@@ -316,22 +316,35 @@ button {
 }
 
 .guess-table .col-name {
-  width: clamp(112px, 22%, 190px);
+  width: 26%;
 }
 
-.guess-table .col-attribute {
-  width: calc((100% - clamp(112px, 22%, 190px) - clamp(62px, 9%, 96px)) / 6);
+.guess-table .col-school {
+  width: 18%;
+}
+
+.guess-table .col-compact {
+  width: 8.5%;
+}
+
+.guess-table .col-number,
+.guess-table .col-role {
+  width: 7.5%;
+}
+
+.guess-table .col-recruit {
+  width: 15%;
 }
 
 .guess-table .col-cost {
-  width: clamp(62px, 9%, 96px);
+  width: 9%;
 }
 
 .guess-table th {
   padding: 0 clamp(3px, 0.8vw, 8px) 6px;
   color: #5b7487;
   font-size: clamp(10px, 1.2vw, 12px);
-  text-align: left;
+  text-align: center;
 }
 
 .guess-table td {
@@ -343,6 +356,7 @@ button {
   font-size: clamp(11px, 1.35vw, 14px);
   font-weight: 800;
   line-height: 1.15;
+  text-align: center;
   overflow-wrap: anywhere;
   text-wrap: balance;
 }
@@ -382,7 +396,9 @@ button {
 .guess-table .name {
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: clamp(4px, 0.8vw, 8px);
+  text-align: center;
 }
 
 .guess-table .name span,
@@ -391,6 +407,13 @@ button {
   min-width: 0;
   flex-direction: column;
   line-height: 1.12;
+}
+
+.guess-table .name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-wrap: nowrap;
+  white-space: nowrap;
 }
 
 .guess-table .name small,
@@ -779,11 +802,25 @@ button {
   }
 
   .guess-table .col-name {
-    width: 25%;
+    width: 24%;
+  }
+
+  .guess-table .col-school {
+    width: 15%;
+  }
+
+  .guess-table .col-compact,
+  .guess-table .col-number,
+  .guess-table .col-role {
+    width: 8%;
+  }
+
+  .guess-table .col-recruit {
+    width: 17%;
   }
 
   .guess-table .col-cost {
-    width: 11%;
+    width: 12%;
   }
 
   .guess-table th {
