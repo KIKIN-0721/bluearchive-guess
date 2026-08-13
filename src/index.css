@@ -1,4 +1,4 @@
-/* Shared document defaults; component-level layout lives in App.css. */
+/* 全局只放浏览器默认值和根节点尺寸；具体页面布局集中在 App.css，避免样式分散。 */
 :root {
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",

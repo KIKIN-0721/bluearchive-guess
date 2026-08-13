@@ -2,7 +2,7 @@ import type { ModeKey } from './game';
 
 const STORAGE_KEY = 'b1more-device-stats-v1';
 
-// Stats are intentionally device-local: no server write happens in the static build.
+// 静态版本没有后端统计接口，所有答题记录都只保存在当前设备的 localStorage。
 export interface DeviceStats {
   games: number;
   wins: number;
@@ -22,7 +22,7 @@ export interface Settlement {
   revealed?: boolean;
 }
 
-// Central default keeps new stat fields backward-compatible with older localStorage records.
+// 统一默认值能让以后新增统计字段时兼容旧 localStorage：缺失字段会自动补零。
 export function emptyStats(): DeviceStats {
   return {
     games: 0,
@@ -55,7 +55,7 @@ function hydrate(value: Partial<DeviceStats> | null): DeviceStats {
   };
 }
 
-// Invalid or manually edited localStorage should never break the game startup.
+// localStorage 可能被浏览器清理或被用户手动改坏，读取失败时直接回到空统计。
 export function loadStats(): DeviceStats {
   try {
     return hydrate(JSON.parse(localStorage.getItem(STORAGE_KEY) ?? 'null') as Partial<DeviceStats> | null);
@@ -68,7 +68,7 @@ export function saveStats(stats: DeviceStats): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(stats));
 }
 
-// Convert a finished round into cumulative counters; abandoned rounds skip this function.
+// 把一局已结束游戏折算进累计统计；主动放弃的未完成局不会进入这个函数。
 export function settleStats(current: DeviceStats, settlement: Settlement): DeviceStats {
   const won = settlement.status === 'won';
   const modeStats = current.byMode[settlement.mode];

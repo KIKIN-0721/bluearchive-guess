@@ -293,11 +293,11 @@ button {
 
 .game-area {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 240px;
-  gap: 16px;
-  width: min(1480px, 100%);
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 22px;
+  width: min(1320px, 100%);
   margin: 0 auto;
-  padding: 22px clamp(8px, 2vw, 24px) 112px;
+  padding: 22px clamp(16px, 4vw, 44px) 112px;
   box-sizing: border-box;
 }
 
@@ -312,10 +312,13 @@ button {
   width: 100%;
   table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 0 8px;
+  border-spacing: 1px;
+  border-radius: 8px;
+  background: #cfdbe4;
+  overflow: hidden;
 }
 
-/* Column percentages are computed from the current mode's theoretical widest values in game.ts. */
+/* 列宽百分比由 game.ts 根据当前题库内容估算，再通过 CSS 变量注入。 */
 .guess-table .col-name {
   width: var(--col-name);
 }
@@ -349,16 +352,18 @@ button {
 }
 
 .guess-table th {
-  padding: 0 clamp(3px, 0.8vw, 8px) 6px;
+  height: 30px;
+  padding: 0 clamp(3px, 0.8vw, 8px);
+  background: #f7fafc;
   color: #5b7487;
   font-size: clamp(10px, 1.2vw, 12px);
   text-align: center;
 }
 
 .guess-table td {
-  height: 58px;
+  height: 56px;
   padding: 0 clamp(4px, 0.9vw, 10px);
-  border-block: 1px solid transparent;
+  border: 0;
   background: #e9eef3;
   color: #334657;
   font-size: clamp(11px, 1.35vw, 14px);
@@ -374,29 +379,24 @@ button {
 }
 
 .guess-table td:first-child {
-  border-left: 1px solid transparent;
-  border-radius: 8px 0 0 8px;
+  border-radius: 0;
 }
 
 .guess-table td:last-child {
-  border-right: 1px solid transparent;
-  border-radius: 0 8px 8px 0;
+  border-radius: 0;
 }
 
 .guess-table td.correct {
-  border-color: #47a96b;
   background: #2f9d63;
   color: #ffffff;
 }
 
 .guess-table td.close {
-  border-color: #d79c25;
   background: #d99a24;
   color: #ffffff;
 }
 
 .guess-table td.wrong {
-  border-color: #c85d64;
   background: #c65d64;
   color: #ffffff;
 }
@@ -766,6 +766,7 @@ button {
 @media (max-width: 860px) {
   .game-area {
     grid-template-columns: 1fr;
+    gap: 14px;
   }
 
   .answer {
@@ -806,7 +807,7 @@ button {
   }
 
   .guess-table {
-    border-spacing: 0 6px;
+    border-spacing: 1px;
   }
 
   .guess-table th {

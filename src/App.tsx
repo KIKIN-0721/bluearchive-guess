@@ -55,7 +55,8 @@ function boardWidthStyle(mode: ModeKey): BoardWidthStyle {
   };
 }
 
-// Renders one feedback cell. Numeric hints are arrows; exact-match fields only use colors.
+// 单个反馈格只负责展示 compareGuess 已经算好的结果：
+// 颜色来自 level，年龄和 EX Cost 这类数值字段才可能额外带上下箭头。
 function Cell({ feedback }: { feedback: AttributeFeedback }) {
   return (
     <td className={feedback.level}>
@@ -69,7 +70,7 @@ function Cell({ feedback }: { feedback: AttributeFeedback }) {
   );
 }
 
-// A guess row is deliberately dumb: all comparison work is already done in compareGuess().
+// 每一行对应一次猜测。这里不再做业务判断，只把 GuessFeedback 展开成棋盘单元格。
 function GuessRow({ guess }: { guess: GuessFeedback }) {
   const variant = guess.student.shortName !== guess.student.name ? guess.student.shortName : '';
   return (
@@ -92,7 +93,7 @@ function GuessRow({ guess }: { guess: GuessFeedback }) {
   );
 }
 
-// Shows the data timestamp so testers can tell which SchaleDB snapshot is bundled.
+// 数据时间戳来自同步脚本生成的 students.json，方便确认当前打包的是哪次 SchaleDB 数据。
 function DataNote({ fixed = false }: { fixed?: boolean }) {
   return (
     <footer className={`data-note${fixed ? ' static' : ''}`}>
@@ -102,7 +103,7 @@ function DataNote({ fixed = false }: { fixed?: boolean }) {
   );
 }
 
-// Local statistics live only in this browser/device, so the home page can read them synchronously.
+// 当前统计只保存在浏览器 localStorage，因此主页可以同步读取并直接展示。
 function StatGrid({ stats }: { stats: DeviceStats }) {
   const winRate = stats.games ? Math.round((stats.wins / stats.games) * 100) : 0;
   const average = stats.wins ? (stats.totalWinningGuesses / stats.wins).toFixed(1) : '-';
@@ -180,7 +181,7 @@ function HomePage({
   );
 }
 
-// Multiplayer is kept as an entry point, but no online behavior is wired in on main.
+// main 分支只保留多人入口占位，真正联机逻辑留给测试分支继续开发。
 function MultiPlaceholder({ onBack }: { onBack: () => void }) {
   return (
     <main className="home-shell">
@@ -220,7 +221,7 @@ function SingleGame({
   const columnStyle = useMemo(() => boardWidthStyle(mode), [mode]);
   const hasActiveRound = status === 'playing' && guesses.length > 0;
 
-  // Browser-level navigation cannot show custom text, but it can still prevent accidental loss.
+  // 浏览器刷新或关闭标签页时无法自定义弹窗文案，但可以阻止误关导致未完成局丢失。
   useEffect(() => {
     if (!hasActiveRound) return undefined;
 
@@ -239,7 +240,7 @@ function SingleGame({
     }
   }
 
-  // Starting a round also changes the active mode when called from the mode tabs.
+  // 开局会重置所有局内状态；从题库标签调用时也会顺手切换当前题库。
   function start(nextMode = mode) {
     setMode(nextMode);
     setTarget((current) => pickTarget(nextMode, current.id));
@@ -251,14 +252,14 @@ function SingleGame({
     window.setTimeout(() => inputRef.current?.focus(), 0);
   }
 
-  // The only place that writes completed games to stats; abandoned rounds never call finish().
+  // 只有 finish 会写入统计。用户确认退出未完成局时不会调用这里，因此不计入设备记录。
   function finish(nextStatus: 'won' | 'lost', guessCount: number, reason: 'guessed' | 'failed' | 'revealed') {
     setStatus(nextStatus);
     setFinishReason(reason);
     onSettle({ mode, status: nextStatus, guessCount, revealed: reason === 'revealed' });
   }
 
-  // Submit compares the picked student and closes the round on a hit or after max guesses.
+  // 提交学生后立即比较答案；猜中或达到最大猜测次数时结束本局。
   function submitStudent(student: Student) {
     if (status !== 'playing' || usedIds.has(student.id)) return;
     const feedback = compareGuess(student, target, mode);
@@ -464,7 +465,7 @@ function SingleGame({
   );
 }
 
-// App owns page navigation and the local stats object shared by home and single-player pages.
+// App 是最外层状态容器：负责页面切换，并持有主页和单人模式共用的本地统计。
 function App() {
   const [page, setPage] = useState<Page>('home');
   const [stats, setStats] = useState<DeviceStats>(() => loadStats());
